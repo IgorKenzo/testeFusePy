@@ -18,9 +18,12 @@ class Passthrough(Operations):
     # =======
     def readFilesFromImg(self):
         msg = estenografia.decrypt(self.image)
+        if len(msg) > 0:
+            msg = msg.split(">>>")[1]
+
         msg = msg.split("||")
         for i in range(0,len(msg)-1,2):
-            self.files[msg[i]] = msg[1]
+            self.files[msg[i]] = msg[i+1]
 
     def _full_path(self, partial):
         if partial.startswith("/"):
@@ -54,10 +57,12 @@ class Passthrough(Operations):
         full_path = self._full_path(path)
 
         # i=0
-        # for k,v in self.files.items():
+        for k,v in self.files.items():
         #     print(full_path+k)
-        #     self.write(bytes(full_path+"/"+k, encoding='utf8'),bytes(v, encoding='utf8'),0,i)
-        #     i += 1
+            content = str(v,encoding="utf-8") if type(v) == bytes else v
+            with open(full_path+k, "wb+") as f:
+                f.write(bytes(content,encoding="utf-8"))
+        
 
         dirents = ['.', '..']
         if os.path.isdir(full_path):
@@ -125,15 +130,17 @@ class Passthrough(Operations):
         return os.read(fh, length)
 
     def write(self, path, buf, offset, fh):
+        content = str(buf,encoding="utf-8") if type(buf) == bytes else buf
         if path[1:] in self.files.keys():
-            self.files[path[1:]] += buf
+            self.files[path[1:]] += content
         else:
-            self.files[path[1:]] = buf
+            self.files[path[1:]] = content
             
         os.lseek(fh, offset, os.SEEK_SET)
         msg = ""
         for k,v in self.files.items():
-            msg += f"{k}||{v.decode('ascii')}||"
+            msg += f"{k}||{v}||" #.decode('ascii')
+        print(msg)
         estenografia.encrypt(self.image, msg)
         return os.write(fh, buf)
 
@@ -151,6 +158,10 @@ class Passthrough(Operations):
     def fsync(self, path, fdatasync, fh):
         return self.flush(path, fh)
 
+
+    def destroy(self, path):
+        for k in self.files.keys():
+            os.remove(self.root +"/" + k)
 
 def main(mountpoint, root, image):
     FUSE(Passthrough(root, image), mountpoint, nothreads=True, foreground=True)

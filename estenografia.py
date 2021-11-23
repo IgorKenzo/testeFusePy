@@ -4,6 +4,7 @@ import sys
 
 # inputImg = "image.bmp"
 outputImg = "output.bmp"
+msgStart = ">>>"
 msgBreak = "<<<"
 
 # https://stackoverflow.com/questions/20276458/working-with-bmp-files-in-python-3
@@ -11,7 +12,7 @@ msgBreak = "<<<"
 
 def main(imgPath, msg):
     # encrypt(msg)
-    decrypt(imgPath)
+    print(decrypt(imgPath))
     # print(decrypt(imgPath))
     # retcode = call(["./a"])
     # if retcode == 0:
@@ -26,7 +27,7 @@ def encrypt(imgPath, msg):
     # print(data)
     # availableBits = headerByteToInt(data[2:6])
     
-    message = stringToBinary(msg + msgBreak)
+    message = stringToBinary(msgStart + msg + msgBreak)
 
     dataOffset = headerByteToInt(data[0xA:0xA+4])
 
@@ -47,10 +48,15 @@ def decrypt(filename):
     msgBin = ""
     dataOffset = headerByteToInt(data[0xA:0xA+4])
 
+    msgStartBin = stringToBinary(msgStart)
     msgBreakBin = stringToBinary(msgBreak)
     
     for b in data[dataOffset:]:
         msgBin += str(b % 2)
+    
+    
+    if not msgBin[0:len(msgStartBin)] == msgStartBin:
+        return ""
     # print(binaryToString(msgBin.split(msgBreakBin)[0]))
     return binaryToString(msgBin.split(msgBreakBin)[0])
     # print(msgBin[:70])
