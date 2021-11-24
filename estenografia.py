@@ -1,5 +1,4 @@
 from functools import reduce
-from subprocess import call
 import sys
 
 # inputImg = "image.bmp"
