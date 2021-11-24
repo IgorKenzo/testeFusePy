@@ -16,6 +16,7 @@ class Passthrough(Operations):
         self.readFilesFromImg()
     # Helpers
     # =======
+    
     def readFilesFromImg(self):
         msg = estenografia.decrypt(self.image)
         if len(msg) > 0:
